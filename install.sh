@@ -12,3 +12,5 @@ pip install wordcloud
 pip install transformers[torch]
 pip install accelerate -U
 
+apt-get install vim
+export EDITOR=vi
