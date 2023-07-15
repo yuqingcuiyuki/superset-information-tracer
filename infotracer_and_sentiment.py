@@ -28,7 +28,7 @@ import string
 import nltk
 # from gensim import corpora, models
 
-
+from tqdm import tqdm
 
 """# ETL for infotracer table"""
 
@@ -307,8 +307,8 @@ def parse(df):
   # new_df = pd.DataFrame(columns=df.columns)
   parsed_df=[]
   # iterate over each row in the original dataframe
-  for index, row in df.iterrows():
-    print('parsing row', index)
+  for index, row in tqdm(df.iterrows(), total=df.shape[0]):
+    # print('parsing row', index)
     # split the "text" column value into a list of sentences
     sentences = row['text'].split('. ')  # assuming sentences are separated by ". "
     new_df=pd.DataFrame({
@@ -367,14 +367,15 @@ def sent_analyze(df):
   pos_prob=[]
   neu_prob=[]
   neg_prob=[]
-  for i in range(0, len(text), batch):
+  # for i in range(0, len(text), batch):
+  for i in tqdm(range(0, len(text), batch), desc='Sentiment analysis', total=len(text)//batch):
     analyze_result=analyzer.predict(text[i:i+batch])
 
     label+=[r.output for r in analyze_result]
     pos_prob+=[r.probas['POS'] for r in analyze_result]
     neu_prob+=[r.probas['NEU'] for r in analyze_result]
     neg_prob+=[r.probas['NEG'] for r in analyze_result]
-    print("Batch {} done".format(int(i/32)+1))
+    # print("Batch {} done".format(int(i/32)+1))
 
 
   df['label']=label

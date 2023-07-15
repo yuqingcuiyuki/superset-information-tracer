@@ -8,6 +8,7 @@ pip install numpy
 pip install pysentimiento
 pip install nltk
 pip install wordcloud
+pip install tqdm
 
 pip install transformers[torch]
 pip install accelerate -U
