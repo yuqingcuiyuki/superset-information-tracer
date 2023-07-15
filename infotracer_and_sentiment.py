@@ -50,13 +50,19 @@ def generate_infotracer_table(start_date, end_date, query_dict, config, update_d
   # query with information tracer api
   df=[]
 
+  # to save id_hash256 for each candidate, will be used in youtube comment search and network search
+  id_hash256_dict={}
+
   for candidate, query in query_dict.items():
     id_hash256 = informationtracer.trace(query=query, 
                                          token=your_token, 
                                          start_date=start_date, 
                                          end_date=end_date, 
+                                         timeout=1200,
                                          skip_result=True
                                          )
+    id_hash256_dict[cadidate]=id_hash256
+
     url = "https://informationtracer.com/api/v1/result?token={}&id_hash256={}".format(your_token, id_hash256)
     results = requests.get(url).json() #will get json for all data of keyword, results is a dictionary
 
@@ -100,7 +106,7 @@ def generate_infotracer_table(start_date, end_date, query_dict, config, update_d
     mydb.close()
 
     # return query result
-  return df
+  return df, id_hash256_dict
 
 
 # ETL data for sentiment table
@@ -225,7 +231,7 @@ def search_comments(video_id, API_KEY):
 
 """## youtube query"""
 
-def query_youtube_comment(start_date, end_date, query_dict, config):
+def query_youtube_comment(start_date, end_date, query_dict, id_hash256_dict, config):
 ##############################################################################
 ##  This function use information tracer result to query for youtube comment, 
 ##  and convert utc time to mexico time.
@@ -240,12 +246,7 @@ def query_youtube_comment(start_date, end_date, query_dict, config):
   # get video id from information tracer source data
   videoId_dic={}
   for candidate, query in query_dict.items():
-    id_hash256 = informationtracer.trace(query=query, 
-                                         token=your_token, 
-                                         start_date=start_date, 
-                                         end_date=end_date,
-                                         skip_result=True
-                                         )
+    id_hash256 = id_hash256_dict[candidate]
     url="https://informationtracer.com/loadsource?source={}&id_hash256={}&token={}".format('youtube', id_hash256, your_token)
     results=requests.get(url).json()
     videoId_dic[candidate] = [data['id']['videoId'] for data in results] 
@@ -398,7 +399,7 @@ def generate_infotracer_and_sentiment_table(start_date, end_date, ytb_end_date, 
 
 
   # get information tracer query result (also insert to db)
-  df=generate_infotracer_table(start_date=start_date,
+  df, id_hash256_dict = generate_infotracer_table(start_date=start_date,
                                end_date=end_date,
                                query_dict=query_dict,
                                config=config,
@@ -409,6 +410,7 @@ def generate_infotracer_and_sentiment_table(start_date, end_date, ytb_end_date, 
   ytbcomment_df=query_youtube_comment(start_date=start_date,
                                       end_date=ytb_end_date,
                                       query_dict=query_dict,
+                                      id_hash256_dict=id_hash256_dict,
                                       config=config
                                       )
 
@@ -456,4 +458,4 @@ def generate_infotracer_and_sentiment_table(start_date, end_date, ytb_end_date, 
     mydb.commit()
     mydb.close()
 
-  return
+  return id_hash256_dict

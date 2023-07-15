@@ -123,6 +123,7 @@ if config["date"]["predefined_period"]==True:
   print('##############################')
   print("historical data collection")
 
+  id_hash256_dict = {}
 
   # helper: add historical data
   if config["generate_helper_table"]["run"]==True:
@@ -160,13 +161,13 @@ if config["date"]["predefined_period"]==True:
   if config["generate_infotracer_and_sentiment_table"]["run"]==True:
     try:
       print('infotracer and sentiment table start')
-      generate_infotracer_and_sentiment_table(start_date = config["date"]["start_date"],
-                                              end_date = config["date"]["end_date"],  
-                                              ytb_end_date = config["date"]["end_date"],  
-                                              query_dict = config["query_dict"], 
-                                              config=config,
-                                              update_db = config["generate_infotracer_and_sentiment_table"]["update_db"]
-                                              )
+      id_hash256_dict = generate_infotracer_and_sentiment_table(start_date = config["date"]["start_date"],
+                                                end_date = config["date"]["end_date"],  
+                                                ytb_end_date = config["date"]["end_date"],  
+                                                query_dict = config["query_dict"], 
+                                                config=config,
+                                                update_db = config["generate_infotracer_and_sentiment_table"]["update_db"]
+                                                )
       print('infotracer and sentiment table end')
     except Exception as e:
       print(f"An error occurred for infotracer and sentiment table when updating historical data: {e}")
@@ -180,6 +181,7 @@ if config["date"]["predefined_period"]==True:
                              end_date = config["date"]["end_date"],
                              query_dict = config["query_dict"], 
                              config=config,
+                             id_hash256=id_hash256,
                              update_db = config["generate_network_table"]["update_db"]
                              )
       print('network table ends')
@@ -208,6 +210,8 @@ else:
   # do daily data collection
   print('##############################')
   print('daily update starts')
+
+  id_hash256_dict = {}
 
   # helper: daily collect 
   if config["generate_helper_table"]["run"]==True:
@@ -257,13 +261,13 @@ else:
       today = datetime.now(pytz.UTC).date().strftime('%Y-%m-%d')
       tomorrow = (datetime.now(pytz.UTC).date() + timedelta(days=1)).strftime('%Y-%m-%d')
 
-      generate_infotracer_and_sentiment_table(start_date = today,
-                                              end_date = tomorrow,  
-                                              ytb_end_date = tomorrow,  
-                                              query_dict = config["query_dict"], 
-                                              config=config,
-                                              update_db = config["generate_infotracer_and_sentiment_table"]["update_db"]
-                                              )
+      id_hash256_dict = generate_infotracer_and_sentiment_table(start_date = today,
+                                                                end_date = tomorrow,  
+                                                                ytb_end_date = tomorrow,  
+                                                                query_dict = config["query_dict"], 
+                                                                config=config,
+                                                                update_db = config["generate_infotracer_and_sentiment_table"]["update_db"]
+                                                                )
       print('infotracer and sentiment table end')
     except Exception as e:
       print(f"An error occurred for infotracer and sentiment table when updating historical data: {e}")
@@ -281,6 +285,7 @@ else:
                              end_date = tomorrow,  
                              query_dict = config["query_dict"], 
                              config=config,
+                             id_hash256_dict=id_hash256_dict
                              update_db = config["generate_network_table"]["update_db"]
                              )
       print('network table ends')
@@ -345,13 +350,13 @@ else:
     try:
       print('infotracer and sentiment table start')
 
-      generate_infotracer_and_sentiment_table(start_date = two_days_ago, 
-                                              end_date = two_days_ago,
-                                              ytb_end_date = two_days_ago,  
-                                              query_dict = config["query_dict"], 
-                                              config=config,
-                                              update_db = config["refresh"]["update_db"]
-                                              )
+      id_hash256_dict = generate_infotracer_and_sentiment_table(start_date = two_days_ago, 
+                                                                end_date = two_days_ago,
+                                                                ytb_end_date = two_days_ago,  
+                                                                query_dict = config["query_dict"], 
+                                                                config=config,
+                                                                update_db = config["refresh"]["update_db"]
+                                                                )
       print('infotracer and sentiment table end')
     except Exception as e:
       print(f"An error occurred for infotracer and sentiment table when updating historical data: {e}")

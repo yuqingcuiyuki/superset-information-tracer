@@ -34,7 +34,7 @@ from wordcloud import WordCloud
 """# ETL data for network"""
 
 
-def generate_network_table(start_date, end_date, query_dict, config, update_db=True):
+def generate_network_table(start_date, end_date, query_dict, config, id_hash256_dict, update_db=True):
   
 
   # information tracer token
@@ -43,7 +43,16 @@ def generate_network_table(start_date, end_date, query_dict, config, update_db=T
 
   for candidate, query in query_dict.items():
     ## extract data
-    id_hash256 = informationtracer.trace(query=query, token=your_token, start_date=start_date, end_date=end_date, skip_result=True)
+    if len(id_hash256_dict) == 0:
+      id_hash256 = informationtracer.trace(query=query, 
+                                          token=your_token, 
+                                          start_date=start_date, 
+                                          end_date=end_date, 
+                                          timeout=1200,
+                                          skip_result=True)
+    else: 
+      id_hash256 = id_hash256_dict[candidate]
+      
     url = "https://informationtracer.com/cross_platform/{}/interaction_network_{}.json".format(id_hash256[:3], id_hash256)
 
     network_json = requests.get(url).json()
