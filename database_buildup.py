@@ -145,12 +145,12 @@ if config["date"]["predefined_period"]==True:
   if config["generate_infotracer_table"]["run"]==True:
     try:
       print('infotracer table starts')
-      generate_infotracer_table(start_date = config["date"]["start_date"], 
-                                end_date = config["date"]["end_date"], 
-                                query_dict = config["query_dict"], 
-                                config=config,
-                                update_db = config["generate_infotracer_table"]["update_db"]
-                                )
+      df, id_hash256_dict = generate_infotracer_table(start_date = config["date"]["start_date"], 
+                                                      end_date = config["date"]["end_date"], 
+                                                      query_dict = config["query_dict"], 
+                                                      config=config,
+                                                      update_db = config["generate_infotracer_table"]["update_db"]
+                                                      )
       print('infotracer table ends')
     except Exception as e:
       print(f"An error occurred for infotracer table when updating historical data: {e}")
@@ -241,12 +241,12 @@ else:
       today = datetime.now(pytz.UTC).date().strftime('%Y-%m-%d')
       tomorrow = (datetime.now(pytz.UTC).date() + timedelta(days=1)).strftime('%Y-%m-%d')
 
-      generate_infotracer_table(start_date = today, 
-                                end_date = tomorrow, 
-                                query_dict = config["query_dict"], 
-                                config=config,
-                                update_db = config["generate_infotracer_table"]["update_db"]
-                                )
+      df, id_hash256_dict = generate_infotracer_table(start_date = today, 
+                                                      end_date = tomorrow, 
+                                                      query_dict = config["query_dict"], 
+                                                      config=config,
+                                                      update_db = config["generate_infotracer_table"]["update_db"]
+                                                      )
       print('infotracer table ends')
     except Exception as e:
       print(f"An error occurred for infotracer table when updating historical data: {e}")
