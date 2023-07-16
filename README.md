@@ -107,26 +107,29 @@ The network graph is cumulative.
 - **Refresh:** We also refresh data collected 48 hours ago, as real-time interactions tend to stabilize after this time period.
 
 ## Installation and Configuration
+**Below is a brief overview. Please refer to the full version of the [installation guide](https://docs.google.com/document/d/1V725VmZ-5Tw7E4OyKRAS1Xz6ZhtQqQ3QJM-oxIp576I/edit?usp=sharing) for more detailed instructions and troubleshooting tips.**
+- Register for google cloud and config an E2 instance (high mem better)
+- Install git, yum, docker, docker-compose to vm
 - Clone the repository
 ```
 git clone https://github.com/zhouhanc/superset-information-tracer.git
 ```
-- Prepare db_info.txt, infotracer_token.txt, youtube_tokens.txt and modify paths
-- Schedule database_buildup.py daily using crontab
+- Start Superset, MySQL container on vm
+- Start Python container and map repo into the container
+- Connect Superset, MySQL, Python to same docker network
+- Enter Python container to schedule the main script for data collection
 ```
-# create crontab job
-crontab -e
-
-PATH=<...> # sync the path with system
-45 23 * * * python ~/superset-information-tracer/database_buildup.py >> /tmp/dashboard_log/monitor_$(date +\%Y\%m\%d_\%H\%M\%S).txt
-# add empty line at the end to run
-
-# exit and view crontab job
-crontab -l
+chmod 755 install.sh
+./install.sh
+cp config_template.py config.py
+python database_buildup.py
 ```
-
-
-
+To complete the config, Information Tracer token and Youtube token are required. Email zhouhan@safelink.network to request for Information Tracer token. Follow [this tutorial](https://www.youtube.com/watch?v=44OBOSBd73M&list=PLjfkRo1W0KzVIn2Gei-ok02-ZtvvIqkSK&index=14) for Youtube token.
+  
+- Connect MySQL database in Superset using sqlalchemy_uri
+- Dashboard migration: Download the dashboard template from [this link](https://drive.google.com/file/d/1qkLzbPA86hDfxFO4IZ-y-ss2fA2RxbBt/view?usp=sharing) and import in Superset
+- Customization
+ 
 ## License
 MIT
 
