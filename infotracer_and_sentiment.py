@@ -307,7 +307,7 @@ def parse(df):
   # new_df = pd.DataFrame(columns=df.columns)
   parsed_df=[]
   # iterate over each row in the original dataframe
-  for index, row in tqdm(df.iterrows(), total=df.shape[0]):
+  for index, row in tqdm(df.iterrows(), desc='Parsing sentences', total=df.shape[0]):
     # print('parsing row', index)
     # split the "text" column value into a list of sentences
     sentences = row['text'].split('. ')  # assuming sentences are separated by ". "
