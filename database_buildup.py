@@ -181,7 +181,7 @@ if config["date"]["predefined_period"]==True:
                              end_date = config["date"]["end_date"],
                              query_dict = config["query_dict"], 
                              config=config,
-                             id_hash256=id_hash256,
+                             id_hash256_dict=id_hash256_dict,
                              update_db = config["generate_network_table"]["update_db"]
                              )
       print('network table ends')
