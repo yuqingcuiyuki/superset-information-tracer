@@ -3,10 +3,11 @@ A multi-narrative, multi-platform information tracing dashboard
 
 - A dashboard built on top of [Information Tracer](https://informationtracer.com/) data 
 - Useful to monitor multiple narratives over multiple platforms (Twitter, Facebook, Instagram, Youtube, Reddit)
-- **Real-world use case**: monitor and compare popularity and sentiments of 4 candidates during the [2023 Coahuila Election](https://mexico.informationtracer.com/superset/dashboard/12/) ([media coverage](https://conecta.tec.mx/es/noticias/nacional/educacion/docentes-de-tec-y-nyu-crean-plataforma-que-analiza-redes-en-elecciones)) 
+- **Real-world use case**: monitor and compare popularity and sentiments of 4 candidates during the [2023 Coahuila Election](https://mexico.informationtracer.com/superset/dashboard/12/) ([media coverage](https://conecta.tec.mx/es/noticias/nacional/educacion/docentes-de-tec-y-nyu-crean-plataforma-que-analiza-redes-en-elecciones))
+
 ![image](https://github.com/zhouhanc/superset-information-tracer/assets/71556325/6130b4e5-1f0f-4cc6-afaa-ef356dff162f)
 
-<br>
+
 <br>
 
 [**General Functions of the Dashboard**](#general-functions-of-the-dashboard) |
