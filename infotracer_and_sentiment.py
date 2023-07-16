@@ -24,46 +24,45 @@ import itertools
 
 import re
 import string
-from nltk.stem.snowball import SnowballStemmer
+# from nltk.stem.snowball import SnowballStemmer
 import nltk
-from gensim import corpora, models
+# from gensim import corpora, models
 
-
+from tqdm import tqdm
 
 """# ETL for infotracer table"""
 
-def convert_time(column):
+# DEPRECATED all convert time: do not need to adjust time zone within script. can adjust in superset
 
-##############################################################################
-##  This function takes the datetime column of any dataframe 
-##  and convert utc time to mexico time.
-##  This function is part of another function. DO NOT run directly.
-##############################################################################
 
-  column=column.apply(lambda x: pytz.utc.localize(x))
-  #utc to mexico time
-  mexico_tz = timezone('America/Mexico_City')
-  convert_timestamp = lambda x: x.astimezone(mexico_tz).replace(tzinfo=None)
-  column = column.apply(convert_timestamp)
-  return column
-
-def generate_infotracer_table(start_date,end_date,query_dict,update_db=True):
+def generate_infotracer_table(start_date, end_date, query_dict, config, update_db=False):
 
 ########################################################################################
-##  This function query data using information tracer, store in df, convert time and insert
-##  data into information tracer table. It returns a df of qury result. This result will be used for sentiment analysis.
+##  This function query data using information tracer, store in df and insert
+##  data into information tracer table. It returns a df of query result. 
+##  This result will be used for sentiment analysis.
 ##  This function is part of another function. DO NOT run directly.
 ########################################################################################
 
   # information tracer token
-  with open(os.path.expanduser('~/infotracer_token.txt'), 'r') as f:
-      your_token = f.read()
+  your_token=config.infotracer_token
 
   # query with information tracer api
   df=[]
 
+  # to save id_hash256 for each candidate, will be used in youtube comment search and network search
+  id_hash256_dict={}
+
   for candidate, query in query_dict.items():
-    id_hash256 = informationtracer.trace(query=query, token=your_token, start_date=start_date, end_date=end_date, skip_result=True)
+    id_hash256 = informationtracer.trace(query=query, 
+                                         token=your_token, 
+                                         start_date=start_date, 
+                                         end_date=end_date, 
+                                         timeout=1200,
+                                         skip_result=True
+                                         )
+    id_hash256_dict[candidate]=id_hash256
+
     url = "https://informationtracer.com/api/v1/result?token={}&id_hash256={}".format(your_token, id_hash256)
     results = requests.get(url).json() #will get json for all data of keyword, results is a dictionary
 
@@ -76,49 +75,44 @@ def generate_infotracer_table(start_date,end_date,query_dict,update_db=True):
 
   df=pd.concat(df)
   df=df.rename(columns={'d':'text','i':'num_interaction','n':'username','t':'datetime'})
-
-  # convert timezone
-  df['datetime'] = convert_time(df['datetime'])
   df=df.drop_duplicates()
 
   print('#################################################')
-  print('the shape of infotracer table is:',df.shape)
+  print('the shape of infotracer table is:', df.shape)
   print('#################################################')
 
   if update_db==True:
   
-    #read db configs
-    with open(os.path.expanduser('~/db_info.txt'), 'r') as f:
-        lines = f.readlines()
-
-    localhost = lines[0].strip()
-    username = lines[1].strip()
-    pw = lines[2].strip()
-
-    #connect to database
+    # connect to database
     mydb = mysql.connector.connect(
-      host=localhost,
-      user=username,
-      password=pw
+      host=config.db_info["localhost"],
+      user=config.db_info["username"],
+      password=config.db_info["pw"]
     )
 
+
     mycursor = mydb.cursor()
+    database_name = config.database_name 
     # select database to modify
-    mycursor.execute("use dashboard")
+    mycursor.execute(f"USE {database_name}")
+
 
     # insert to db
     infotracer_data = df.apply(tuple, axis=1).tolist()
     query="insert into infotracer (text,num_interaction,username,datetime,platform,candidate_name) Values(%s,%s,%s,%s,%s,%s);"
-    mycursor.executemany(query,infotracer_data)
+    mycursor.executemany(query, infotracer_data)
 
     mydb.commit()
-    # return query result
-  return df
+    mydb.close()
 
-"""# ETL data for sentiment table
+    # return query result
+  return df, id_hash256_dict
+
+
+# ETL data for sentiment table
 
 ## youtube comment functions
-"""
+
 
 ##############################################################################
 ##  NOTE: register youtube API key!
@@ -129,17 +123,9 @@ def generate_infotracer_table(start_date,end_date,query_dict,update_db=True):
 ##  One key is enough, more keys can speed up the data collection process
 #############################################################################
 
-# read a dictionary of names and values of youtube api key 
-API_KEY= {}
 
-with open(os.path.expanduser('~/youtube_tokens.txt'), 'r') as f:
-    for line in f:
-        key, value = line.strip().split(',')
-        API_KEY[key] = value
 
-API_KEY = list(API_KEY.values())
-
-def search_replies(comment_id):
+def search_replies(comment_id, API_KEY):
     headers = {
         'Accept': 'application/json',
     }    
@@ -161,7 +147,7 @@ def search_replies(comment_id):
         return results
 
     results += [item for item in response.json()['items']]
-#     print(results)
+
     nextPageToken = response.json().get('nextPageToken', None)
     
     while nextPageToken:
@@ -189,7 +175,7 @@ def search_replies(comment_id):
 
 
 
-def search_comments(video_id):        
+def search_comments(video_id, API_KEY):        
     headers = {
         'Accept': 'application/json',
     }    
@@ -235,42 +221,32 @@ def search_comments(video_id):
     for i in results:
         if i['snippet']['totalReplyCount'] > 5:
             print('hydrating more comments...')
-            i['replies']['comments'] = search_replies(i['id'])
+            i['replies']['comments'] = search_replies(i['id'], API_KEY)
             print(len(i['replies']['comments']))
 
     # save results    
     return results
 
-def convert_time_ytb(column):
-##############################################################################
-##  This function takes the datetime column of any dataframe 
-##  and convert utc time to mexico time. For ytb comment only.
-##  This function is part of another function. DO NOT run directly.
-##############################################################################
 
-  #utc to mexico time
-  mexico_tz = timezone('America/Mexico_City')
-  convert_timestamp = lambda x: x.astimezone(mexico_tz).replace(tzinfo=None)
-  column = column.apply(convert_timestamp)
-  return column
 
 """## youtube query"""
 
-def query_youtube_comment(start_date,end_date,query_dict):
+def query_youtube_comment(start_date, end_date, query_dict, id_hash256_dict, config):
 ##############################################################################
 ##  This function use information tracer result to query for youtube comment, 
 ##  and convert utc time to mexico time.
 ##  This function is part of another function. DO NOT run directly.
 ##############################################################################
+  
+  # read youtube api key, infotracer token from config
+  API_KEY = list(config.youtube_token.values())
 
-  # information tracer token
-  with open(os.path.expanduser('~/infotracer_token.txt'), 'r') as f:
-      your_token = f.read()
+  your_token = config.infotracer_token
 
   # get video id from information tracer source data
   videoId_dic={}
   for candidate, query in query_dict.items():
-    id_hash256 = informationtracer.trace(query=query, token=your_token, start_date=start_date, end_date=end_date,skip_result=True)
+    id_hash256 = id_hash256_dict[candidate]
     url="https://informationtracer.com/loadsource?source={}&id_hash256={}&token={}".format('youtube', id_hash256, your_token)
     results=requests.get(url).json()
     videoId_dic[candidate] = [data['id']['videoId'] for data in results] 
@@ -284,7 +260,7 @@ def query_youtube_comment(start_date,end_date,query_dict):
     date=[]
     for vid in videoId_list:
       if vid!=[]:
-        result=search_comments(vid)
+        result=search_comments(vid, API_KEY)
         for i in np.arange(0,len(result),1):
           comment.append(result[i]['snippet']['topLevelComment']['snippet']['textDisplay'])
           username.append(result[i]['snippet']['topLevelComment']['snippet']['authorDisplayName'])
@@ -299,9 +275,7 @@ def query_youtube_comment(start_date,end_date,query_dict):
   ytbcomment_df=pd.concat(ytbcomment_df)
   
 
-  # convert timezone
   if ytbcomment_df.empty==False:
-    ytbcomment_df['datetime'] = convert_time_ytb(ytbcomment_df['datetime'])
     ytbcomment_df=ytbcomment_df.drop_duplicates()
 
   print('#################################################')
@@ -310,7 +284,10 @@ def query_youtube_comment(start_date,end_date,query_dict):
   # return query result
   return ytbcomment_df
 
-"""## text process functions"""
+
+
+
+## text process functions
 
 # remove \n and ...
 def remove_n(df):
@@ -318,6 +295,7 @@ def remove_n(df):
   df['text'] = df['text'].str.replace(r'\.{2,}', '.', regex=True)
   return df
   
+
 # parse
 def parse(df):
   print('#################################################')
@@ -329,8 +307,8 @@ def parse(df):
   # new_df = pd.DataFrame(columns=df.columns)
   parsed_df=[]
   # iterate over each row in the original dataframe
-  for index, row in df.iterrows():
-    print('parsing row', index)
+  for index, row in tqdm(df.iterrows(), desc='Parsing sentences', total=df.shape[0]):
+    # print('parsing row', index)
     # split the "text" column value into a list of sentences
     sentences = row['text'].split('. ')  # assuming sentences are separated by ". "
     new_df=pd.DataFrame({
@@ -346,6 +324,8 @@ def parse(df):
   parsed_df=pd.concat(parsed_df)
   return parsed_df
 
+
+
 # Define a function to restore spanish accents
 def replace_special_chars(text):
   text = re.sub(r'\\u([\da-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), text)
@@ -360,6 +340,9 @@ def replace_special_chars(text):
   # return ' '.join(stemmed_words)
   return text
 
+
+
+
 def text_process(df):
   # restore accent
   df['text'] = df['text'].apply(replace_special_chars)
@@ -370,11 +353,13 @@ def text_process(df):
 
   return df
 
+
+
 """## sentiment analysis function"""
 
 # do sentiment analysis in batches
 def sent_analyze(df):
-  batch=512
+  batch=32
   analyzer = create_analyzer(task="sentiment", lang="es", batch_size=batch)
 
   text=df['processed_text'].tolist() #list of texts
@@ -382,22 +367,28 @@ def sent_analyze(df):
   pos_prob=[]
   neu_prob=[]
   neg_prob=[]
-  for i in range(0, len(text), batch):
+  # for i in range(0, len(text), batch):
+  for i in tqdm(range(0, len(text), batch), desc='Sentiment analysis', total=len(text)//batch):
     analyze_result=analyzer.predict(text[i:i+batch])
 
     label+=[r.output for r in analyze_result]
     pos_prob+=[r.probas['POS'] for r in analyze_result]
     neu_prob+=[r.probas['NEU'] for r in analyze_result]
     neg_prob+=[r.probas['NEG'] for r in analyze_result]
-    print("Batch {} done".format(int(i/512)))
+    # print("Batch {} done".format(int(i/32)+1))
+
 
   df['label']=label
   df['positive']=pos_prob
   df['neutral']=neu_prob
   df['negative']=neg_prob
+  print("df done")
   return df
 
-def generate_infotracer_and_sentiment_table(start_date,end_date,ytb_end_date,query_dict, update_db=True):
+
+
+
+def generate_infotracer_and_sentiment_table(start_date, end_date, ytb_end_date, query_dict, config, update_db=True):
 
 ###########################################################################
 ## This function generates both infotracer and sentiment table.
@@ -406,15 +397,23 @@ def generate_infotracer_and_sentiment_table(start_date,end_date,ytb_end_date,que
 ###########################################################################
 
 
-  # information tracer token
-  with open(os.path.expanduser('~/infotracer_token.txt'), 'r') as f:
-      your_token = f.read()
+
 
   # get information tracer query result (also insert to db)
-  df=generate_infotracer_table(start_date=start_date,end_date=end_date,query_dict=query_dict,update_db=update_db)
+  df, id_hash256_dict = generate_infotracer_table(start_date=start_date,
+                               end_date=end_date,
+                               query_dict=query_dict,
+                               config=config,
+                               update_db=update_db
+                               )
 
   #get youtube comment query result
-  ytbcomment_df=query_youtube_comment(start_date=start_date,end_date=ytb_end_date,query_dict=query_dict)
+  ytbcomment_df=query_youtube_comment(start_date=start_date,
+                                      end_date=ytb_end_date,
+                                      query_dict=query_dict,
+                                      id_hash256_dict=id_hash256_dict,
+                                      config=config
+                                      )
 
   # merge results
   # text for sentiment table: everything in df + used youtube raw data to extract comment
@@ -432,33 +431,32 @@ def generate_infotracer_and_sentiment_table(start_date,end_date,ytb_end_date,que
   # sentiment calculation
 
   full_sentiment=sent_analyze(sentiment)
+  print("sent done")
   
   if update_db==True:
 
-    #read db configs
-    with open(os.path.expanduser('~/db_info.txt'), 'r') as f:
-          lines = f.readlines()
-
-    localhost = lines[0].strip()
-    username = lines[1].strip()
-    pw = lines[2].strip()
-
-    #connect to database
+    # connect to database
     mydb = mysql.connector.connect(
-      host=localhost,
-      user=username,
-      password=pw
+      host=config.db_info["localhost"],
+      user=config.db_info["username"],
+      password=config.db_info["pw"]
     )
 
+
     mycursor = mydb.cursor()
+    database_name = config.database_name
     # select database to modify
-    mycursor.execute("use dashboard")
+    mycursor.execute(f"USE {database_name}")
+
 
     # commit full sentiment to sentiment table in db
     sent_data = full_sentiment.apply(tuple, axis=1).tolist()
     query="insert into sentiment (text,num_interaction,username,datetime,platform,candidate_name,processed_text,label, positive, neutral, negative) Values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);" 
+    print("start insert")
     mycursor.executemany(query,sent_data)
+    print("inset done")
 
     mydb.commit()
+    mydb.close()
 
-  return
+  return id_hash256_dict

@@ -1,0 +1,70 @@
+
+{
+"db_info":{
+    "localhost": "mysql self-defined container name", // after connecting the container to docker shared network, can use container name instead of machine public address to connect
+    "username":"root",
+    "pw": "password"
+},
+
+"infotracer_token": "your token",
+
+"youtube_token":{
+"name1":"token1",
+"name2":"token2"
+
+},
+
+"query_dict":{
+    "candidate1":"candidate1 keywords",
+    "candidate2":"candidate2 keywords"
+
+}, 
+
+"database_name": "dashboard", // keep the same as template, do not modify
+
+"delete_all_table_and_restart": false,
+
+"date":{
+    "predefined_period":true, // if false, daily update
+    "start_date": "2023-05-01",
+    "end_date":"2023-06-01"
+},
+
+// the following part is for debug, user don't need to modify
+// run true means run the data collection
+// update true means update the collected data to db
+
+"generate_helper_table":{
+    "run":true,
+    "update_db":true
+},
+
+// this should generally be false
+// generate infotracer and sentiment table takes care of both 
+"generate_infotracer_table":{
+    "run":true,
+    "update_db":true
+},
+
+"generate_infotracer_and_sentiment_table":{
+    "run":true,
+    "update_db":true
+},
+
+"generate_wordcloud_table":{
+    "last_n_days":14, // what range of data to use to generate wordcloud
+    "stop_word_file":"spanish", // language of stopword
+    "run":true,
+    "update_db":true
+},
+
+"generate_network_table":{
+    "run":true,
+    "update_db":true
+},
+// turn on of off daily refresh
+"refresh": {
+    "run": true,
+    "update_db": true
+
+}

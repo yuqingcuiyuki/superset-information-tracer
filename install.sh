@@ -1,0 +1,17 @@
+
+
+pip install --upgrade pip
+pip install informationtracer
+pip install mysql-connector-python
+pip install pandas
+pip install numpy
+pip install pysentimiento
+pip install nltk
+pip install wordcloud
+pip install tqdm
+
+pip install transformers[torch]
+pip install accelerate -U
+
+apt-get install vim
+export EDITOR=vi

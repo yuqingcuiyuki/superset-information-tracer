@@ -24,41 +24,35 @@ import itertools
 
 import re
 import string
-from nltk.stem.snowball import SnowballStemmer
+# from nltk.stem.snowball import SnowballStemmer
 import nltk
-from gensim import corpora, models
+# from gensim import corpora, models
 from wordcloud import WordCloud
 
 
 
 """# ETL data for network"""
 
-def convert_time(column):
 
-##############################################################################
-##  This function takes the datetime column of any dataframe 
-##  and convert utc time to mexico time.
-##  This function is part of another function. DO NOT run directly.
-##############################################################################
-
-  column=column.apply(lambda x: pytz.utc.localize(x))
-  #utc to mexico time
-  mexico_tz = timezone('America/Mexico_City')
-  convert_timestamp = lambda x: x.astimezone(mexico_tz).replace(tzinfo=None)
-  column = column.apply(convert_timestamp)
-  return column
-
-
-def generate_network_table(start_date,end_date,query_dict, update_db=True):
+def generate_network_table(start_date, end_date, query_dict, config, id_hash256_dict, update_db=True):
   
 
   # information tracer token
-  with open(os.path.expanduser('~/infotracer_token.txt'), 'r') as f:
-      your_token = f.read()
+
+  your_token = config.infotracer_token
 
   for candidate, query in query_dict.items():
     ## extract data
-    id_hash256 = informationtracer.trace(query=query, token=your_token, start_date=start_date, end_date=end_date, skip_result=True)
+    if len(id_hash256_dict) == 0:
+      id_hash256 = informationtracer.trace(query=query, 
+                                          token=your_token, 
+                                          start_date=start_date, 
+                                          end_date=end_date, 
+                                          timeout=1200,
+                                          skip_result=True)
+    else: 
+      id_hash256 = id_hash256_dict[candidate]
+      
     url = "https://informationtracer.com/cross_platform/{}/interaction_network_{}.json".format(id_hash256[:3], id_hash256)
 
     network_json = requests.get(url).json()
@@ -119,31 +113,26 @@ def generate_network_table(start_date,end_date,query_dict, update_db=True):
     })
     nw_df['source_datetime']=pd.to_datetime(nw_df['source_datetime'])
     nw_df['target_datetime']=pd.to_datetime(nw_df['target_datetime'])
-    nw_df['source_datetime']=convert_time(nw_df['source_datetime'])
-    nw_df['target_datetime']=convert_time(nw_df['target_datetime'])
+
 
     nw_df['candidate_name']=candidate
 	
+
+  
     if update_db==True:
 
-      #read db configs
-      with open(os.path.expanduser('~/db_info.txt'), 'r') as f:
-        lines = f.readlines()
-
-      localhost = lines[0].strip()
-      username = lines[1].strip()
-      pw = lines[2].strip()
-
-      #connect to database
+      # connect to database
       mydb = mysql.connector.connect(
-        host=localhost,
-        user=username,
-        password=pw
+        host=config.db_info["localhost"],
+        user=config.db_info["username"],
+        password=config.db_info["pw"]
       )
 
+
       mycursor = mydb.cursor()
+      database_name = config.database_name
       # select database to modify
-      mycursor.execute("use dashboard")
+      mycursor.execute(f"USE {database_name}")
 
       ##### insert into mysql table source, target, weight, source_category, target_category
       nw_data=nw_df.apply(tuple, axis=1).tolist()
@@ -151,6 +140,7 @@ def generate_network_table(start_date,end_date,query_dict, update_db=True):
       mycursor.executemany(query,nw_data)
 
       mydb.commit()
+      mydb.close()
 
   return
 
