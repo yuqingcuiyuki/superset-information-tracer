@@ -2,9 +2,12 @@ A multi-narrative, multi-platform information tracing dashboard
 =========
 
 - A dashboard built on top of [Information Tracer](https://informationtracer.com/) data 
-- Useful to monitor multiple narratives over multiple platforms
-- Real-world use case: monitor and compare popularity and sentiments of 4 candidates during the 2023 Coahuila Election 
-<br>https://mexico.informationtracer.com/superset/dashboard/12/
+- Useful to monitor multiple narratives over multiple platforms (Twitter, Facebook, Instagram, Youtube, Reddit)
+- **Real-world use case**: monitor and compare popularity and sentiments of 4 candidates during the [2023 Coahuila Election](https://mexico.informationtracer.com/superset/dashboard/12/) ([media coverage](https://conecta.tec.mx/es/noticias/nacional/educacion/docentes-de-tec-y-nyu-crean-plataforma-que-analiza-redes-en-elecciones)) 
+![image](https://github.com/zhouhanc/superset-information-tracer/assets/71556325/6130b4e5-1f0f-4cc6-afaa-ef356dff162f)
+
+<br>
+<br>
 
 [**General Functions of the Dashboard**](#general-functions-of-the-dashboard) |
 [**Graph Documentation**](#graph-documentation) | 
@@ -12,14 +15,22 @@ A multi-narrative, multi-platform information tracing dashboard
 [**Installation and Configuration**](#installation-and-configuration) 
 
 ## General Functions of the Dashboard
-- Hover on graphs to see statistics in details.
-- Customize timeframe by dragging the blue time bar below each graph.
-- Click on legends to show or hide a candidate.
-- Click "Grouped" or "Stacked" to change bar plot orientation.
-- Search bar: enter keywords to filter records.
-- Drag columns to change the order of table.
-- Click on column names to sort tables.
-- Hover on an edge or node to check weight and highlight part of the network.
+### Interactivity:
+- **Hover**: Hover on graphs to see statistics in details; Hover on an edge or node to check weight and highlight part of the network.
+- **Click**: Click on legends to show or hide a candidate; Click "Grouped" or "Stacked" to change bar plot orientation.
+- **Sort**: Click on column names to sort tables.
+- **Search**: enter keywords into search bar to find records.
+- **Drag**: Drag columns to change the order of table; Customize timeframe by dragging the blue time bar below each graph.
+
+### Filtering:
+Expand the sidebar to select sentiment type, node names and edge weights and click apply tp update the whole dashbaord.
+
+### Others:
+- **Refresh**: Manually force refresh dashboard to show latest data or set auto-refresh interval.
+- **Download & Export**: Save dashboard and/or analytics as images; Export analytics as csv. 
+
+<br>
+
 
 ## Graph Documentation
 
