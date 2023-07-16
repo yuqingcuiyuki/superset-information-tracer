@@ -1,7 +1,7 @@
 A multi-narrative, multi-platform information tracing dashboard
 =========
 
-- A dashboard built on top of [Information Tracer](https://github.com/zhouhanc/informationtracer) data 
+- A dashboard built on top of [Information Tracer](https://informationtracer.com/) data 
 - Useful to monitor multiple narratives over multiple platforms
 - Real-world use case: monitor and compare popularity and sentiments of 4 candidates during the 2023 Coahuila Election 
 <br>https://mexico.informationtracer.com/superset/dashboard/12/
