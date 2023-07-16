@@ -61,7 +61,7 @@ def generate_infotracer_table(start_date, end_date, query_dict, config, update_d
                                          timeout=1200,
                                          skip_result=True
                                          )
-    id_hash256_dict[cadidate]=id_hash256
+    id_hash256_dict[candidate]=id_hash256
 
     url = "https://informationtracer.com/api/v1/result?token={}&id_hash256={}".format(your_token, id_hash256)
     results = requests.get(url).json() #will get json for all data of keyword, results is a dictionary
