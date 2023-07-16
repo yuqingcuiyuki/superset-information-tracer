@@ -285,7 +285,7 @@ else:
                              end_date = tomorrow,  
                              query_dict = config["query_dict"], 
                              config=config,
-                             id_hash256_dict=id_hash256_dict
+                             id_hash256_dict=id_hash256_dict,
                              update_db = config["generate_network_table"]["update_db"]
                              )
       print('network table ends')
