@@ -30,8 +30,6 @@ Expand the sidebar to select sentiment type, node names and edge weights and cli
 - **Refresh**: Manually force refresh dashboard to show latest data or set auto-refresh interval.
 - **Download & Export**: Save dashboard and/or analytics as images; Export analytics as csv. 
 
-<br>
-
 
 ## Graph Documentation
 
@@ -102,7 +100,7 @@ How we calculate the **weight of an edge** between node user-A and node hashtag-
 The network graph is cumulative.
 
 ## Architecture
-![image](https://user-images.githubusercontent.com/71556325/236377040-537f8e51-d1ee-45be-9107-49ea2d48ee17.png)
+![workship architecture](https://github.com/zhouhanc/superset-information-tracer/assets/71556325/07b4b3d3-9dde-4c4d-9495-43692803cdf2)
 
 **Update Mechanism**<br>
 - **Daily Update:** We perform daily data collection at 11:45 PM UTC to capture the latest data for the current day.
