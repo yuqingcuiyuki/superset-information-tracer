@@ -38,21 +38,22 @@ from infotracer_and_sentiment import generate_infotracer_and_sentiment_table
 from wordcloud_table import generate_wordcloud_table
 from network_table import generate_network_table
 
+# config
 import json
+from config import Config
 
 
-# read config
-with open('config.json', 'r' ,encoding='utf-8') as f:
-  config=json.load(f)
+
+config = Config()
 
 
 
 
 #connect to database
 mydb = mysql.connector.connect(
-  host=config["db_info"]["localhost"],
-  user=config["db_info"]["username"],
-  password=config["db_info"]["pw"]
+  host=config.db_info['localhost'],
+  user=config.db_info["username"],
+  password=config.db_info["pw"]
 )
 
 
@@ -61,7 +62,7 @@ mycursor.execute("SHOW DATABASES")
 all_databases = mycursor.fetchall()
 print("all available databases:",all_databases)
 
-database_name = config["database_name"] 
+database_name = config.database_name
 
 
 if (database_name,) not in all_databases:
@@ -90,7 +91,7 @@ else:
   # select database to modify
   mycursor.execute("USE {}".format(database_name))
 
-  if config["delete_all_table_and_restart"] == True:
+  if config.delete_all_table_and_restart == True:
     # delete table
     mycursor.execute("drop table if exists infotracer")
     mycursor.execute("drop table if exists sentiment")
@@ -112,13 +113,13 @@ else:
 
 
 # start data collection
-print("the data collection is for the following candidates:", config["query_dict"].keys())
+print("the data collection is for the following candidates:", config.query_dict.keys())
 
 
 # use config to choose: historical OR daily + refresh
 # each block should be surrounded by try except
 
-if config["date"]["predefined_period"]==True:
+if config.date["predefined_period"]==True:
   # do historical data collection
   print('##############################')
   print("historical data collection")
@@ -126,14 +127,14 @@ if config["date"]["predefined_period"]==True:
   id_hash256_dict = {}
 
   # helper: add historical data
-  if config["generate_helper_table"]["run"]==True:
+  if config.generate_helper_table["run"]==True:
     try:
       print('helper table starts')
-      generate_helper_table(start_date = config["date"]["start_date"], 
-                            end_date = config["date"]["end_date"], 
-                            query_dict = config["query_dict"], 
-                            config=config,
-                            update_db=config["generate_helper_table"]["update_db"]
+      generate_helper_table(start_date = config.date["start_date"], 
+                            end_date = config.date["end_date"], 
+                            query_dict = config.query_dict, 
+                            config = config,
+                            update_db = config.generate_helper_table["update_db"]
                             )
       print('helper table ends')                      
     except Exception as e:
@@ -142,14 +143,14 @@ if config["date"]["predefined_period"]==True:
 
   # infotracer: add historical data
   # this should generally be false
-  if config["generate_infotracer_table"]["run"]==True:
+  if config.generate_infotracer_table["run"]==True:
     try:
       print('infotracer table starts')
-      df, id_hash256_dict = generate_infotracer_table(start_date = config["date"]["start_date"], 
-                                                      end_date = config["date"]["end_date"], 
-                                                      query_dict = config["query_dict"], 
-                                                      config=config,
-                                                      update_db = config["generate_infotracer_table"]["update_db"]
+      df, id_hash256_dict = generate_infotracer_table(start_date = config.date["start_date"],  
+                                                      end_date = config.date["end_date"], 
+                                                      query_dict = config.query_dict, 
+                                                      config = config,
+                                                      update_db = config.generate_infotracer_table["update_db"]
                                                       )
       print('infotracer table ends')
     except Exception as e:
@@ -158,15 +159,15 @@ if config["date"]["predefined_period"]==True:
 
   # infotracer and sentiment: add historical data
   # this collect and update two table
-  if config["generate_infotracer_and_sentiment_table"]["run"]==True:
+  if config.generate_infotracer_and_sentiment_table["run"]==True:
     try:
       print('infotracer and sentiment table start')
-      id_hash256_dict = generate_infotracer_and_sentiment_table(start_date = config["date"]["start_date"],
-                                                end_date = config["date"]["end_date"],  
-                                                ytb_end_date = config["date"]["end_date"],  
-                                                query_dict = config["query_dict"], 
+      id_hash256_dict = generate_infotracer_and_sentiment_table(start_date = config.date["start_date"],  
+                                                end_date = config.date["end_date"],  
+                                                ytb_end_date = config.date["end_date"],  
+                                                query_dict = config.query_dict, 
                                                 config=config,
-                                                update_db = config["generate_infotracer_and_sentiment_table"]["update_db"]
+                                                update_db = config.generate_infotracer_and_sentiment_table["update_db"]
                                                 )
       print('infotracer and sentiment table end')
     except Exception as e:
@@ -174,15 +175,15 @@ if config["date"]["predefined_period"]==True:
 
 
   # network: add historical data
-  if config["generate_network_table"]["run"]==True:
+  if config.generate_network_table["run"]==True:
     try:
       print('network table starts')
-      generate_network_table(start_date = config["date"]["start_date"],
-                             end_date = config["date"]["end_date"],
-                             query_dict = config["query_dict"], 
-                             config=config,
-                             id_hash256_dict=id_hash256_dict,
-                             update_db = config["generate_network_table"]["update_db"]
+      generate_network_table(start_date = config.date["start_date"],  
+                             end_date = config.date["end_date"],
+                             query_dict = config.query_dict, 
+                             config = config,
+                             id_hash256_dict = id_hash256_dict,
+                             update_db = config.generate_network_table["update_db"]
                              )
       print('network table ends')
     except Exception as e:
@@ -190,12 +191,12 @@ if config["date"]["predefined_period"]==True:
 
 
   # wordcloud: generate wordcloud using historical data
-  if config["generate_wordcloud_table"]["run"]==True:
+  if config.generate_wordcloud_table["run"]==True:
     try:
       print('wordcloud table starts')
-      generate_wordcloud_table(query_dict = config["query_dict"], 
-                               config=config,
-                               update_db = config["generate_wordcloud_table"]["update_db"]
+      generate_wordcloud_table(query_dict = config.query_dict,
+                               config = config,
+                               update_db = config.generate_wordcloud_table["update_db"]
                                )
       print('wordcloud table ends')
     except Exception as e:
@@ -214,7 +215,7 @@ else:
   id_hash256_dict = {}
 
   # helper: daily collect 
-  if config["generate_helper_table"]["run"]==True:
+  if config.generate_helper_table["run"]==True:
     try:
       print('helper table starts')
 
@@ -223,9 +224,9 @@ else:
 
       generate_helper_table(start_date = today, 
                             end_date = tomorrow, 
-                            query_dict = config["query_dict"], 
-                            config=config,
-                            update_db=config["generate_helper_table"]["update_db"]
+                            query_dict = config.query_dict, 
+                            config = config,
+                            update_db=config.generate_helper_table["update_db"]
                             )
       print('helper table ends')                      
     except Exception as e:
@@ -234,7 +235,7 @@ else:
 
   # infotracer: daily collect
   # this should generally be false
-  if config["generate_infotracer_table"]["run"]==True:
+  if config.generate_infotracer_table["run"]==True:
     try:
       print('infotracer table starts')
 
@@ -243,9 +244,9 @@ else:
 
       df, id_hash256_dict = generate_infotracer_table(start_date = today, 
                                                       end_date = tomorrow, 
-                                                      query_dict = config["query_dict"], 
-                                                      config=config,
-                                                      update_db = config["generate_infotracer_table"]["update_db"]
+                                                      query_dict = config.query_dict, 
+                                                      config = config,
+                                                      update_db = config.generate_infotracer_table["update_db"]
                                                       )
       print('infotracer table ends')
     except Exception as e:
@@ -254,7 +255,7 @@ else:
 
   # infotracer and sentiment: daily collect
   # this collect and update two table
-  if config["generate_infotracer_and_sentiment_table"]["run"]==True:
+  if config.generate_infotracer_and_sentiment_table["run"]==True:
     try:
       print('infotracer and sentiment table start')
 
@@ -264,9 +265,9 @@ else:
       id_hash256_dict = generate_infotracer_and_sentiment_table(start_date = today,
                                                                 end_date = tomorrow,  
                                                                 ytb_end_date = tomorrow,  
-                                                                query_dict = config["query_dict"], 
-                                                                config=config,
-                                                                update_db = config["generate_infotracer_and_sentiment_table"]["update_db"]
+                                                                query_dict = config.query_dict, 
+                                                                config = config,
+                                                                update_db = config.generate_infotracer_and_sentiment_table["update_db"]
                                                                 )
       print('infotracer and sentiment table end')
     except Exception as e:
@@ -274,7 +275,7 @@ else:
 
 
   # network: daily collect
-  if config["generate_network_table"]["run"]==True:
+  if config.generate_network_table["run"]==True:
     try:
       print('network table starts')
 
@@ -283,10 +284,10 @@ else:
 
       generate_network_table(start_date = today,
                              end_date = tomorrow,  
-                             query_dict = config["query_dict"], 
-                             config=config,
-                             id_hash256_dict=id_hash256_dict,
-                             update_db = config["generate_network_table"]["update_db"]
+                             query_dict = config.query_dict, 
+                             config = config,
+                             id_hash256_dict = id_hash256_dict,
+                             update_db = config.generate_network_table["update_db"]
                              )
       print('network table ends')
     except Exception as e:
@@ -297,9 +298,9 @@ else:
   if config["generate_wordcloud_table"]["run"]==True:
     try:
       print('wordcloud table starts')
-      generate_wordcloud_table(query_dict = config["query_dict"], 
-                              config=config,
-                              update_db = config["generate_wordcloud_table"]["update_db"]
+      generate_wordcloud_table(query_dict = config.query_dict, 
+                              config = config,
+                              update_db = config.generate_wordcloud_table["update_db"]
                               )
       print('wordcloud table ends')
     except Exception as e:
@@ -319,7 +320,7 @@ else:
   print('##############################')
   print('##############################')
 
-  if config["refresh"]["run"]==True:
+  if config.refresh["run"]==True:
     print('daily refresh starts')
 
     # delete old data from db
@@ -353,9 +354,9 @@ else:
       id_hash256_dict = generate_infotracer_and_sentiment_table(start_date = two_days_ago, 
                                                                 end_date = two_days_ago,
                                                                 ytb_end_date = two_days_ago,  
-                                                                query_dict = config["query_dict"], 
-                                                                config=config,
-                                                                update_db = config["refresh"]["update_db"]
+                                                                query_dict = config.query_dict, 
+                                                                config = config,
+                                                                update_db = config.refresh["update_db"]
                                                                 )
       print('infotracer and sentiment table end')
     except Exception as e:

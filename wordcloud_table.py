@@ -50,22 +50,22 @@ def generate_wordcloud_table(query_dict, config, update_db=False):
 
   # connect to database
   mydb = mysql.connector.connect(
-    host=config["db_info"]["localhost"],
-    user=config["db_info"]["username"],
-    password=config["db_info"]["pw"]
+    host=config.db_info["localhost"],
+    user=config.db_info["username"],
+    password=config.db_info["pw"]
   )
 
 
   mycursor = mydb.cursor()
-  database_name = config["database_name"] 
+  database_name = config.database_name
   # select database to modify
   mycursor.execute(f"USE {database_name}")
 
 
   
   # read time and language config 
-  last_n_days = config["generate_wordcloud_table"]["last_n_days"]
-  stop_word_file = config["generate_wordcloud_table"]["stop_word_file"]
+  last_n_days = config.generate_wordcloud_table["last_n_days"]
+  stop_word_file = config.generate_wordcloud_table["stop_word_file"]
 
 
   #query for data in last_n_days

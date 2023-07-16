@@ -45,7 +45,7 @@ def generate_infotracer_table(start_date, end_date, query_dict, config, update_d
 ########################################################################################
 
   # information tracer token
-  your_token=config["infotracer_token"]
+  your_token=config.infotracer_token
 
   # query with information tracer api
   df=[]
@@ -85,14 +85,14 @@ def generate_infotracer_table(start_date, end_date, query_dict, config, update_d
   
     # connect to database
     mydb = mysql.connector.connect(
-      host=config["db_info"]["localhost"],
-      user=config["db_info"]["username"],
-      password=config["db_info"]["pw"]
+      host=config.db_info["localhost"],
+      user=config.db_info["username"],
+      password=config.db_info["pw"]
     )
 
 
     mycursor = mydb.cursor()
-    database_name = config["database_name"] 
+    database_name = config.database_name 
     # select database to modify
     mycursor.execute(f"USE {database_name}")
 
@@ -239,9 +239,9 @@ def query_youtube_comment(start_date, end_date, query_dict, id_hash256_dict, con
 ##############################################################################
   
   # read youtube api key, infotracer token from config
-  API_KEY = list(config["youtube_token"].values())
+  API_KEY = list(config.youtube_token.values())
 
-  your_token = config["infotracer_token"]
+  your_token = config.infotracer_token
 
   # get video id from information tracer source data
   videoId_dic={}
@@ -437,14 +437,14 @@ def generate_infotracer_and_sentiment_table(start_date, end_date, ytb_end_date, 
 
     # connect to database
     mydb = mysql.connector.connect(
-      host=config["db_info"]["localhost"],
-      user=config["db_info"]["username"],
-      password=config["db_info"]["pw"]
+      host=config.db_info["localhost"],
+      user=config.db_info["username"],
+      password=config.db_info["pw"]
     )
 
 
     mycursor = mydb.cursor()
-    database_name = config["database_name"] 
+    database_name = config.database_name
     # select database to modify
     mycursor.execute(f"USE {database_name}")
 
